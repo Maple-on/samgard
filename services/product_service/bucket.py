@@ -13,14 +13,15 @@ SUPPORTED_FILE_TYPES = {
 }
 
 SESSION = boto3.Session(
-        bucket_settings.aws_access_key_id,
-        bucket_settings.aws_secret_access_key
-    )
+    bucket_settings.aws_access_key_id,
+    bucket_settings.aws_secret_access_key
+)
 
 S3_BUCKET_NAME = bucket_settings.s3_bucket_name
 S3 = SESSION.resource('s3')
 BUCKET = S3.Bucket(S3_BUCKET_NAME)
 MB = 1024 * 1024
+
 
 def send_image_to_s3(file: UploadFile):
     # checking if file is not empty
@@ -53,8 +54,8 @@ def send_image_to_s3(file: UploadFile):
         raise
 
     uploaded_file_url = f"https://{S3_BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/{filename}"
-    return uploaded_file_url 
-    
+    return uploaded_file_url
+
 
 def delete_image_from_s3(file_url: str):
     file_name = file_url.split("/")[3]
@@ -73,6 +74,7 @@ def delete_image_from_s3(file_url: str):
             print("AccessDenied to delete the object")
         else:
             raise
+
 
 def update_image_from_s3(file: UploadFile, file_url: str):
     delete_image_from_s3(file_url)

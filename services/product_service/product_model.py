@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from fastapi import UploadFile
 
+
 class ProductModel(BaseModel):
     id: UUID
     name: str
@@ -16,6 +17,7 @@ class ProductModel(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 class CreateProductModel(BaseModel):
     name: str
     description: Optional[str]
@@ -23,6 +25,7 @@ class CreateProductModel(BaseModel):
     price: Decimal
     quantity: Decimal
     unit: Optional[str]
+
 
 class UpdateProductModel(BaseModel):
     name: Optional[str]

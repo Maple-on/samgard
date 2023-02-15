@@ -1,5 +1,6 @@
 from pydantic import BaseSettings
 
+
 class DBSettings(BaseSettings):
     database_user: str
     database_password: str
@@ -9,6 +10,7 @@ class DBSettings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
 
 class BucketSettings(BaseSettings):
     aws_access_key_id: str

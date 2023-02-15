@@ -4,6 +4,7 @@ from .database import Base
 from datetime import datetime
 from uuid import uuid4
 
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -12,7 +13,8 @@ class User(Base):
     email = Column(String, nullable=False)
     password = Column(String, nullable=False)
     role = Column(String, nullable=False)
-    
+
+
 class Category(Base):
     __tablename__ = 'categories'
 
@@ -20,8 +22,9 @@ class Category(Base):
     name = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), default=datetime.now)
     updated_at = Column(DateTime(timezone=True), default=datetime.now)
-    
+
     product = relationship("Product", back_populates="category")
+
 
 class Product(Base):
     __tablename__ = 'products'
@@ -36,9 +39,10 @@ class Product(Base):
     image_url = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), default=datetime.now)
     updated_at = Column(DateTime(timezone=True), default=datetime.now)
-    
+
     category = relationship("Category", back_populates="product")
     transaction = relationship("Transaction", back_populates="product")
+
 
 class Transaction(Base):
     __tablename__ = 'transactions'
@@ -51,5 +55,5 @@ class Transaction(Base):
     status = Column(String, default='pending')
     created_at = Column(DateTime(timezone=True), default=datetime.now)
     updated_at = Column(DateTime(timezone=True), default=datetime.now)
-    
+
     product = relationship("Product", back_populates="transaction")

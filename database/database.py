@@ -9,9 +9,10 @@ DATABASE_URL = f'postgresql://{db_settings.database_user}:{db_settings.database_
 
 engine = create_engine(DATABASE_URL)
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False,)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()

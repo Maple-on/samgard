@@ -11,10 +11,12 @@ class Status(str, Enum):
     paid = "paid"
     cancelled = "cancelled"
 
+
 class PaymentMethod(str, Enum):
     cash = "cash"
     click = "click"
     payme = "payme"
+
 
 class TransactionModel(BaseModel):
     id: UUID
@@ -25,6 +27,7 @@ class TransactionModel(BaseModel):
     status: Status
     created_at: datetime
     updated_at: datetime
+
 
 class CreateTransactionModel(BaseModel):
     product_id: UUID

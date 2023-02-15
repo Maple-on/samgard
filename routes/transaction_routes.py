@@ -7,19 +7,22 @@ from services.transaction_service.transaction import create, get_list, get_by_id
 from database import database
 
 router = APIRouter(
-    prefix = "/transactions",
+    prefix="/transactions",
     tags=['Transactions']
 )
 
 get_db = database.get_db
 
+
 @router.get('/', status_code=status.HTTP_200_OK)
 def Get_list(session: Session = Depends(get_db)):
     return get_list(session)
 
+
 @router.get('/{id}', status_code=status.HTTP_200_OK)
 def Get_by_id(id: UUID, session: Session = Depends(get_db)):
     return get_by_id(id, session)
+
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 def Create(request: CreateTransactionModel, session: Session = Depends(get_db)):
