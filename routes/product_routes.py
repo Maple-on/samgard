@@ -6,6 +6,8 @@ from fastapi import UploadFile, File
 from services.product_service.product_model import CreateProductModel, UpdateProductModel
 from services.product_service.product import create, get_list, get_by_id, delete, update
 from database import database
+from database.oauth2 import get_current_user
+from services.user_service.user_model import UserModel
 
 router = APIRouter(
     prefix="/products",
@@ -27,15 +29,16 @@ def Get_by_id(id: UUID, session: Session = Depends(get_db)):
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 def create_product(request: CreateProductModel = Depends(), picture: UploadFile = File(...),
-                   session: Session = Depends(get_db)):
+                   session: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
     return create(request, picture, session)
 
 
 @router.put('/{id}', status_code=status.HTTP_202_ACCEPTED)
-def Update(id: UUID, request: UpdateProductModel = Depends(), session: Session = Depends(get_db)):
+def Update(id: UUID, request: UpdateProductModel = Depends(), session: Session = Depends(get_db),
+           current_user: UserModel = Depends(get_current_user)):
     return update(id, request, session)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def Delete(id: UUID, session: Session = Depends(get_db)):
+def Delete(id: UUID, session: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
     return delete(id, session)
