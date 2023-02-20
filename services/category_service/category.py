@@ -1,3 +1,4 @@
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
@@ -17,8 +18,8 @@ def create(request: CreateCategoryModel, db: Session):
     return new_category
 
 
-def get_list(db: Session):
-    category = db.query(Category).all()
+def get_list(offset: int, limit: int, db: Session):
+    category = db.query(Category).order_by(desc(Category.created_at)).offset(offset).limit(limit).all()
 
     return category
 

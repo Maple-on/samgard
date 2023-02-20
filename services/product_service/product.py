@@ -3,11 +3,14 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, UploadFile
 from uuid import UUID
 from datetime import datetime
+from sqlalchemy import desc
 
 from services.category_service.category import check_if_category_exists
 from services.product_service.bucket import delete_image_from_s3, send_image_to_s3, update_image_from_s3
 from services.product_service.product_model import CreateProductModel, UpdateProductModel
 from database.models import Product
+# from services.order_service.order_model import ProductBase
+# from typing import List
 
 
 def create(request: CreateProductModel, file: UploadFile, db: Session):
@@ -30,8 +33,8 @@ def create(request: CreateProductModel, file: UploadFile, db: Session):
     return new_product
 
 
-def get_list(db: Session):
-    product = db.query(Product).all()
+def get_list(offset: int, limit: int, db: Session):
+    product = db.query(Product).order_by(desc(Product.created_at)).offset(offset).limit(limit).all()
 
     return product
 
