@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database.database import Base, engine
-from routes import user_routes, category_routes, product_routes, order_routes, auth_routes
+from routes import user_routes, category_routes, product_routes, auth_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(engine)
