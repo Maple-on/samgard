@@ -8,7 +8,7 @@ from sqlalchemy import desc
 from services.category_service.category import check_if_category_exists
 from services.product_service.bucket import delete_image_from_s3, send_image_to_s3, update_image_from_s3
 from services.product_service.product_model import CreateProductModel, UpdateProductModel
-from database.models import Product
+from database.models import Product, Category
 # from services.order_service.order_model import ProductBase
 # from typing import List
 
@@ -29,23 +29,57 @@ def create(request: CreateProductModel, file: UploadFile, db: Session):
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
+    db.close()
 
     return new_product
 
 
 def get_list(offset: int, limit: int, db: Session):
-    product = db.query(Product).order_by(desc(Product.created_at)).offset(offset).limit(limit).all()
+    products = db.query(Product, Category.name).join(Category, Product.category_id == Category.id).order_by(desc(Product.created_at)).offset(offset).limit(limit).all()
+    product_list = [
+        {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "category_id": product.category_id,
+            "category_name": category_name,
+            "price": product.price,
+            "quantity": product.quantity,
+            "unit": product.unit,
+            "image_url": product.image_url,
+            "created_at": product.created_at,
+            "updated_at": product.updated_at
+        }
+        for product, category_name in products
+    ]
+    db.close()
 
-    return product
+    return product_list
 
 
 def get_by_id(id: UUID, db: Session):
-    product = db.query(Product).filter(Product.id == id).first()
-    if not product:
+    result = db.query(Product, Category.name).join(Category, Product.category_id == Category.id).filter(Product.id == id).first()
+    if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Product with id {id} not found")
+    product = result[0]
+    category_name = result[1]
+    product_list = {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "category_id": product.category_id,
+            "category_name": category_name,
+            "price": product.price,
+            "quantity": product.quantity,
+            "unit": product.unit,
+            "image_url": product.image_url,
+            "created_at": product.created_at,
+            "updated_at": product.updated_at
+    }
+    db.close()
 
-    return product
+    return product_list
 
 
 def update(id: UUID, request: UpdateProductModel, db: Session):
@@ -62,6 +96,7 @@ def update(id: UUID, request: UpdateProductModel, db: Session):
     setattr(product, "updated_at", datetime.now())
     db.commit()
     db.refresh(product)
+    db.close()
 
     return product
 
@@ -78,6 +113,7 @@ def delete(id: UUID, db: Session):
     delete_image_from_s3(file_url)
     product.delete(synchronize_session=False)
     db.commit()
+    db.close()
 
     return status.HTTP_204_NO_CONTENT
 
