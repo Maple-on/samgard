@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, UploadFile
 from uuid import UUID
 from datetime import datetime
-from sqlalchemy import desc
+from sqlalchemy import desc, text, func
 
 from services.category_service.category import check_if_category_exists
 from services.product_service.bucket import delete_image_from_s3, send_image_to_s3, update_image_from_s3
