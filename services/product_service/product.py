@@ -35,6 +35,8 @@ def create(request: CreateProductModel, file: UploadFile, db: Session):
 
 
 def get_list(offset: int, limit: int, db: Session):
+    sql = "SELECT COUNT(*) FROM products"
+    count = db.execute(text(sql)).fetchone()[0]
     products = db.query(Product, Category.name).join(Category, Product.category_id == Category.id).order_by(desc(Product.created_at)).offset(offset).limit(limit).all()
     product_list = [
         {
@@ -54,7 +56,7 @@ def get_list(offset: int, limit: int, db: Session):
     ]
     db.close()
 
-    return product_list
+    return {"products": product_list, "total": count}
 
 
 def get_by_id(id: UUID, db: Session):
