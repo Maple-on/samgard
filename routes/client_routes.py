@@ -1,23 +1,23 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from services.category_service.category import CreateCategoryModel, UpdateCategoryModel
-from services.category_service.category import create, get_list, get_by_id, delete, update
+from services.client_service.client_model import CreateClientModel
+from services.client_service.client import create, get_by_id, delete, get_list
 from database import database
 from database.oauth2 import get_current_user
 from services.user_service.user_model import UserModel
 
 router = APIRouter(
-    prefix="/category",
-    tags=['Category']
+    prefix="/clients",
+    tags=['Clients']
 )
 
 get_db = database.get_db
 
 
 @router.get('/', status_code=status.HTTP_200_OK)
-def Get_list(offset: int = 0, limit: int = 10, session: Session = Depends(get_db)):
-    return get_list(offset, limit, session)
+def Get_list(session: Session = Depends(get_db)):
+    return get_list(session)
 
 
 @router.get('/{id}', status_code=status.HTTP_200_OK)
@@ -26,13 +26,8 @@ def Get_by_id(id: int, session: Session = Depends(get_db)):
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-def Create(request: CreateCategoryModel, session: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def Create(request: CreateClientModel, session: Session = Depends(get_db)):
     return create(request, session)
-
-
-@router.put('/{id}', status_code=status.HTTP_202_ACCEPTED)
-def Update(id: int, request: UpdateCategoryModel, session: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
-    return update(id, request, session)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)

@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import Optional
-from uuid import UUID
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -12,7 +11,7 @@ class Role(str, Enum):
 
 
 class UserModel(BaseModel):
-    id: UUID
+    id: int
     username: str
     email: str
     password: str

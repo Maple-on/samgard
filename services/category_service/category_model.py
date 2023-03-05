@@ -1,11 +1,10 @@
 from typing import Optional
-from uuid import UUID
 from pydantic import BaseModel
 from datetime import datetime
 
 
 class CategoryModel(BaseModel):
-    id: UUID
+    id: int
     name: str
     created_at: datetime
     updated_at: datetime

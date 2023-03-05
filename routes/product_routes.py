@@ -1,4 +1,3 @@
-from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, File
@@ -23,7 +22,7 @@ def Get_list(offset: int = 0, limit: int = 10, session: Session = Depends(get_db
 
 
 @router.get('/{id}', status_code=status.HTTP_200_OK)
-def Get_by_id(id: UUID, session: Session = Depends(get_db)):
+def Get_by_id(id: int, session: Session = Depends(get_db)):
     return get_by_id(id, session)
 
 
@@ -34,11 +33,12 @@ def create_product(request: CreateProductModel = Depends(), picture: UploadFile 
 
 
 @router.put('/{id}', status_code=status.HTTP_202_ACCEPTED)
-def Update(id: UUID, request: UpdateProductModel = Depends(), session: Session = Depends(get_db),
+def Update(id: int, request: UpdateProductModel = Depends(), session: Session = Depends(get_db),
            current_user: UserModel = Depends(get_current_user)):
     return update(id, request, session)
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def Delete(id: UUID, session: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def Delete(id: int, session: Session = Depends(get_db),
+           current_user: UserModel = Depends(get_current_user)):
     return delete(id, session)

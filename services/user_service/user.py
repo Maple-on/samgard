@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from uuid import UUID
 from services.user_service.user_model import CreateUserModel, UpdateUserModel
 from database.models import User
 from datetime import datetime
@@ -27,7 +26,7 @@ def get_list(db: Session):
     return user
 
 
-def get_by_id(id: UUID, db: Session):
+def get_by_id(id: int, db: Session):
     user = db.query(User).filter(User.id == id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -36,7 +35,7 @@ def get_by_id(id: UUID, db: Session):
     return user
 
 
-def update(id: UUID, request: UpdateUserModel, db: Session):
+def update(id: int, request: UpdateUserModel, db: Session):
     user = db.get(User, id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -52,7 +51,7 @@ def update(id: UUID, request: UpdateUserModel, db: Session):
     return user
 
 
-def delete(id: UUID, db: Session):
+def delete(id: int, db: Session):
     user = db.query(User).filter(User.id == id)
     if not user.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

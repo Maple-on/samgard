@@ -1,7 +1,6 @@
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from uuid import UUID
 from services.category_service.category_model import CreateCategoryModel, UpdateCategoryModel
 from database.models import Category
 from datetime import datetime
@@ -24,7 +23,7 @@ def get_list(offset: int, limit: int, db: Session):
     return category
 
 
-def get_by_id(id: UUID, db: Session):
+def get_by_id(id: int, db: Session):
     category = db.query(Category).filter(Category.id == id).first()
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -33,7 +32,7 @@ def get_by_id(id: UUID, db: Session):
     return category
 
 
-def update(id: UUID, request: UpdateCategoryModel, db: Session):
+def update(id: int, request: UpdateCategoryModel, db: Session):
     category = db.get(Category, id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -49,7 +48,7 @@ def update(id: UUID, request: UpdateCategoryModel, db: Session):
     return category
 
 
-def delete(id: UUID, db: Session):
+def delete(id: int, db: Session):
     category = db.query(Category).filter(Category.id == id)
     if not category.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -61,7 +60,7 @@ def delete(id: UUID, db: Session):
     return status.HTTP_204_NO_CONTENT
 
 
-def check_if_category_exists(id: UUID, db: Session):
+def check_if_category_exists(id: int, db: Session):
     category = db.get(Category, id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

@@ -1,4 +1,3 @@
-from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -20,7 +19,7 @@ def Get_list(session: Session = Depends(get_db)):
 
 
 @router.get('/{id}', status_code=status.HTTP_200_OK)
-def Get_by_id(id: UUID, session: Session = Depends(get_db)):
+def Get_by_id(id: int, session: Session = Depends(get_db)):
     return get_by_id(id, session)
 
 

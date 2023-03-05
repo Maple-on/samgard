@@ -1,19 +1,18 @@
 from decimal import Decimal
 from typing import Optional
-from uuid import UUID
 from pydantic import BaseModel
 from datetime import datetime
 from fastapi import UploadFile
 
 
 class ProductModel(BaseModel):
-    id: UUID
+    id: int
     name: str
     description: str
-    category: UUID
+    category: int
     image: UploadFile
     price: Decimal
-    quantity: Decimal
+    amount: Decimal
     created_at: datetime
     updated_at: datetime
 
@@ -21,17 +20,17 @@ class ProductModel(BaseModel):
 class CreateProductModel(BaseModel):
     name: str
     description: Optional[str]
-    category_id: UUID
+    category_id: int
     price: Decimal
-    quantity: Decimal
+    amount: Decimal
     unit: Optional[str]
 
 
 class UpdateProductModel(BaseModel):
     name: Optional[str]
     description: Optional[str]
-    category_id: Optional[UUID]
+    category_id: Optional[int]
     price: Optional[Decimal]
-    quantity: Optional[Decimal]
+    amount: Optional[Decimal]
     unit: Optional[str]
     image_url: Optional[UploadFile]

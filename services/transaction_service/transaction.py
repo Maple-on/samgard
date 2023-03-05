@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from uuid import UUID
 from services.product_service.product import check_if_product_exists
 from services.transaction_service.transaction_model import CreateTransactionModel
 from database.models import Transaction
@@ -27,7 +26,7 @@ def get_list(db: Session):
     return transactions
 
 
-def get_by_id(id: UUID, db: Session):
+def get_by_id(id: int, db: Session):
     transaction = db.query(Transaction).filter(Transaction.id == id).first()
     if not transaction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -35,7 +34,7 @@ def get_by_id(id: UUID, db: Session):
 
     return transaction
 
-# def update(id: UUID, request: UpdateCourierModel, db: Session):
+# def update(id: int, request: UpdateCourierModel, db: Session):
 #     transaction = db.get(Transaction, id)
 #     if not transaction:
 #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -50,7 +49,7 @@ def get_by_id(id: UUID, db: Session):
 
 #     return transaction
 
-# def delete(id: UUID, db: Session):
+# def delete(id: int, db: Session):
 #     transaction = db.query(Transaction).filter(Transaction.id == id)
 #     if not transaction.first():
 #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 

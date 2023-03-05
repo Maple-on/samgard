@@ -1,5 +1,3 @@
-from typing import Optional
-from uuid import UUID
 from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
@@ -19,9 +17,9 @@ class PaymentMethod(str, Enum):
 
 
 class TransactionModel(BaseModel):
-    id: UUID
-    product_id: UUID
-    quantity: Decimal
+    id: int
+    product_id: int
+    amount: Decimal
     price: Decimal
     payment_method: PaymentMethod
     status: Status
@@ -30,7 +28,7 @@ class TransactionModel(BaseModel):
 
 
 class CreateTransactionModel(BaseModel):
-    product_id: UUID
-    quantity: Decimal
+    product_id: int
+    amount: Decimal
     price: Decimal
     payment_method: PaymentMethod

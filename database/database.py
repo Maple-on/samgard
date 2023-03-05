@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -20,3 +20,6 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+create_unique_id_sequence = text("CREATE SEQUENCE IF NOT EXISTS unique_id START WITH 10000000 INCREMENT BY 1 CACHE 1;")
