@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi import UploadFile, File
 
 from services.product_service.product_model import CreateProductModel, UpdateProductModel
-from services.product_service.product import create, get_list, get_by_id, delete, update
+from services.product_service.product import create, get_list, get_by_id, delete, update, search
 from database import database
 from database.oauth2 import get_current_user
 from services.user_service.user_model import UserModel
@@ -42,3 +42,8 @@ def Update(id: int, request: UpdateProductModel = Depends(), session: Session = 
 def Delete(id: int, session: Session = Depends(get_db),
            current_user: UserModel = Depends(get_current_user)):
     return delete(id, session)
+
+
+@router.get('/search/', status_code=status.HTTP_200_OK)
+def Search(name: str, session: Session = Depends(get_db)):
+    return search(name, session)

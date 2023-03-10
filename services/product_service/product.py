@@ -125,6 +125,31 @@ def delete(id: int, db: Session):
     return status.HTTP_204_NO_CONTENT
 
 
+def search(name: str, db: Session):
+    products = db.query(Product, Category.name).join(Category, Product.category_id == Category.id)\
+        .order_by(desc(Product.created_at)).filter(Product.name.contains(name))
+
+    product_list = [
+        {
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "category_id": product.category_id,
+            "category_name": category_name,
+            "price": product.price,
+            "amount": product.amount,
+            "unit": product.unit,
+            "image_url": product.image_url,
+            "created_at": product.created_at,
+            "updated_at": product.updated_at
+        }
+        for product, category_name in products
+    ]
+    db.close()
+
+    return product_list
+
+
 def check_if_product_exists(product_list: List[ProductBase], db: Session):
     ids = {str(product.id) for product in product_list}
 
