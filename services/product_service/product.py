@@ -127,7 +127,7 @@ def delete(id: int, db: Session):
 
 def search(name: str, db: Session):
     products = db.query(Product, Category.name).join(Category, Product.category_id == Category.id)\
-        .order_by(desc(Product.created_at)).filter(Product.name.contains(name))
+        .order_by(desc(Product.created_at)).filter(Product.name.ilike(f"%{name}%")).all()
 
     product_list = [
         {
