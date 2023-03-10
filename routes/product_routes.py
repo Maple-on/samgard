@@ -17,8 +17,8 @@ get_db = database.get_db
 
 
 @router.get('/', status_code=status.HTTP_200_OK)
-def Get_list(offset: int = 0, limit: int = 10, session: Session = Depends(get_db)):
-    return get_list(offset, limit, session)
+def Get_list(offset: int = 0, limit: int = 10, category_id: int = 0, session: Session = Depends(get_db)):
+    return get_list(offset, limit, category_id, session)
 
 
 @router.get('/{id}', status_code=status.HTTP_200_OK)
