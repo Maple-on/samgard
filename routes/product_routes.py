@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, Header
 
 from services.product_service.product_model import CreateProductModel, UpdateProductModel
 from services.product_service.product import create, get_list, get_by_id, delete, update, search
@@ -17,13 +17,13 @@ get_db = database.get_db
 
 
 @router.get('/', status_code=status.HTTP_200_OK)
-def Get_list(offset: int = 0, limit: int = 10, category_id: int = 0, session: Session = Depends(get_db)):
-    return get_list(offset, limit, category_id, session)
+def Get_list(offset: int = 0, limit: int = 10, category_id: int = 0, accept_language: str = Header(None), session: Session = Depends(get_db)):
+    return get_list(accept_language, offset, limit, category_id, session)
 
 
 @router.get('/{id}', status_code=status.HTTP_200_OK)
-def Get_by_id(id: int, session: Session = Depends(get_db)):
-    return get_by_id(id, session)
+def Get_by_id(id: int, accept_language: str = Header(None), session: Session = Depends(get_db)):
+    return get_by_id(accept_language, id, session)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)

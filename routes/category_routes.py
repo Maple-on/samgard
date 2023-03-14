@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Header
 from sqlalchemy.orm import Session
 
 from services.category_service.category import CreateCategoryModel, UpdateCategoryModel
@@ -16,13 +16,13 @@ get_db = database.get_db
 
 
 @router.get('/', status_code=status.HTTP_200_OK)
-def Get_list(offset: int = 0, limit: int = 10, session: Session = Depends(get_db)):
-    return get_list(offset, limit, session)
+def Get_list(offset: int = 0, limit: int = 10, accept_language: str = Header(None), session: Session = Depends(get_db)):
+    return get_list(accept_language, offset, limit, session)
 
 
 @router.get('/{id}', status_code=status.HTTP_200_OK)
-def Get_by_id(id: int, session: Session = Depends(get_db)):
-    return get_by_id(id, session)
+def Get_by_id(id: int, accept_language: str = Header(None), session: Session = Depends(get_db)):
+    return get_by_id(accept_language, id, session)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)

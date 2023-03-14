@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from services.order_service.order_model import CreateBaseOrder
-from services.order_service.order import create, get_list, get_by_id, delete
+from services.order_service.order import create, get_list, get_by_id, delete, cancel
 from database import database
 
 router = APIRouter(
@@ -36,3 +36,8 @@ def create_order(request: CreateBaseOrder, session: Session = Depends(get_db)):
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def Delete(id: int, session: Session = Depends(get_db)):
     return delete(id, session)
+
+
+@router.post('/cancel/{id}', status_code=status.HTTP_202_ACCEPTED)
+def Cancel(id: int, session: Session = Depends(get_db)):
+    return cancel(id, session)

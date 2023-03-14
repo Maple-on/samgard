@@ -6,7 +6,7 @@ from sqlalchemy import desc, text, func
 
 from services.category_service.category import check_if_category_exists
 from services.product_service.bucket import delete_image_from_s3, send_image_to_s3, update_image_from_s3
-from services.product_service.product_model import CreateProductModel, UpdateProductModel
+from services.product_service.product_model import CreateProductModel, UpdateProductModel, ProductModelWithAllLanguages, ProductModel
 from database.models import Product, Category
 from services.order_service.order_model import ProductBase, ProductForWithdraw
 from typing import List
@@ -18,7 +18,13 @@ def create(request: CreateProductModel, file: UploadFile, db: Session):
 
     new_product = Product(
         name=request.name,
+        name_uz=request.name_uz,
+        name_tr=request.name_tr,
+        name_en=request.name_en,
         description=request.description,
+        description_uz=request.description_uz,
+        description_tr=request.description_tr,
+        description_en=request.description_en,
         category_id=request.category_id,
         price=request.price,
         amount=request.amount,
@@ -33,8 +39,8 @@ def create(request: CreateProductModel, file: UploadFile, db: Session):
     return new_product
 
 
-def get_list(offset: int, limit: int, category_id: int, db: Session):
-    products = db.query(Product, Category.name).join(Category, Product.category_id == Category.id).order_by(desc(Product.created_at))
+def get_list(accept_language: str, offset: int, limit: int, category_id: int, db: Session):
+    products = db.query(Product, Category).join(Category, Product.category_id == Category.id).order_by(desc(Product.created_at))
 
     if category_id != 0:
         products = products.filter(Product.category_id == category_id)
@@ -42,51 +48,136 @@ def get_list(offset: int, limit: int, category_id: int, db: Session):
     count = len(products.all())
 
     products = products.offset(offset).limit(limit).all()
+    products_list = []
 
-    product_list = [
-        {
-            "id": product.id,
-            "name": product.name,
-            "description": product.description,
-            "category_id": product.category_id,
-            "category_name": category_name,
-            "price": product.price,
-            "amount": product.amount,
-            "unit": product.unit,
-            "image_url": product.image_url,
-            "created_at": product.created_at,
-            "updated_at": product.updated_at
-        }
-        for product, category_name in products
-    ]
+    if accept_language == 'all-ALL':
+        for product, category in products:
+            each_product = ProductModelWithAllLanguages(
+                id=product.id,
+                name=product.name,
+                name_uz=product.name_uz,
+                name_tr=product.name_tr,
+                name_en=product.name_en,
+                description=product.description,
+                description_uz=product.description_uz,
+                description_tr=product.description_tr,
+                description_en=product.description_en,
+                category_id=product.category_id,
+                category_name=category.name,
+                price=product.price,
+                amount=product.amount,
+                unit=product.unit,
+                image_url=product.image_url,
+                created_at=product.created_at,
+                updated_at=product.updated_at
+            )
+            products_list.append(each_product)
+
+        db.close()
+        return products_list
+
+    for product, category in products:
+        if accept_language == 'tr-TR':
+            translated_name = product.name_tr
+            translated_description = product.description_tr
+            category_name = category.name_tr
+        elif accept_language == 'en-EN':
+            translated_name = product.name_en
+            translated_description = product.description_en
+            category_name = category.name_en
+        elif accept_language == 'uz-UZ':
+            translated_name = product.name_uz
+            translated_description = product.description_uz
+            category_name = category.name_uz
+        else:
+            translated_name = product.name
+            translated_description = product.description
+            category_name = category.name
+
+        each_product = ProductModel(
+            id=product.id,
+            name=translated_name,
+            description=translated_description,
+            category_id=product.category_id,
+            category_name=category_name,
+            price=product.price,
+            amount=product.amount,
+            unit=product.unit,
+            image_url=product.image_url,
+            created_at=product.created_at,
+            updated_at=product.updated_at
+        )
+        products_list.append(each_product)
+
     db.close()
+    return {"products": products_list, "total": count}
 
-    return {"products": product_list, "total": count}
 
-
-def get_by_id(id: int, db: Session):
-    result = db.query(Product, Category.name).join(Category, Product.category_id == Category.id).filter(Product.id == id).first()
+def get_by_id(accept_language: str, id: int, db: Session):
+    result = db.query(Product, Category).join(Category, Product.category_id == Category.id).filter(Product.id == id).first()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Product with id {id} not found")
     product = result[0]
-    category_name = result[1]
-    product_list = {
-        "id": product.id,
-        "name": product.name,
-        "description": product.description,
-        "category_id": product.category_id,
-        "category_name": category_name,
-        "price": product.price,
-        "amount": product.amount,
-        "unit": product.unit,
-        "image_url": product.image_url,
-        "created_at": product.created_at,
-        "updated_at": product.updated_at
-    }
-    db.close()
+    category = result[1]
 
-    return product_list
+    if accept_language == 'all-ALL':
+        one_product = ProductModelWithAllLanguages(
+            id=product.id,
+            name=product.name,
+            name_uz=product.name_uz,
+            name_tr=product.name_tr,
+            name_en=product.name_en,
+            description=product.description,
+            description_uz=product.description_uz,
+            description_tr=product.description_tr,
+            description_en=product.description_en,
+            category_id=product.category_id,
+            category_name=category.name,
+            price=product.price,
+            amount=product.amount,
+            unit=product.unit,
+            image_url=product.image_url,
+            created_at=product.created_at,
+            updated_at=product.updated_at
+        )
+
+        db.close()
+        return one_product
+
+    if accept_language == 'tr-TR':
+        translated_name = product.name_tr
+        translated_description = product.description_tr
+        category_name = category.name_tr
+    elif accept_language == 'en-EN':
+        translated_name = product.name_en
+        translated_description = product.description_en
+        category_name = category.name_en
+    elif accept_language == 'uz-UZ':
+        translated_name = product.name_uz
+        translated_description = product.description_uz
+        category_name = category.name_uz
+    else:
+        translated_name = product.name
+        translated_description = product.description
+        category_name = category.name
+
+    one_product = ProductModel(
+        id=product.id,
+        name=translated_name,
+        description=translated_description,
+        category_id=product.category_id,
+        category_name=category_name,
+        price=product.price,
+        amount=product.amount,
+        unit=product.unit,
+        image_url=product.image_url,
+        created_at=product.created_at,
+        updated_at=product.updated_at
+    )
+
+    db.close()
+    return one_product
 
 
 def update(id: int, request: UpdateProductModel, db: Session):

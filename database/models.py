@@ -29,6 +29,9 @@ class Category(Base):
 
     id = Column(Integer, Sequence('unique_id'), primary_key=True, server_default=text("nextval('unique_id')"))
     name = Column(String, nullable=False)
+    name_uz = Column(String, nullable=True)
+    name_en = Column(String, nullable=True)
+    name_tr = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.now)
     updated_at = Column(DateTime(timezone=True), default=datetime.now)
 
@@ -40,7 +43,13 @@ class Product(Base):
 
     id = Column(Integer, Sequence('unique_id'), primary_key=True, server_default=text("nextval('unique_id')"))
     name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    name_uz = Column(String, nullable=True)
+    name_en = Column(String, nullable=True)
+    name_tr = Column(String, nullable=True)
+    description = Column(String, nullable=False)
+    description_uz = Column(String, nullable=True)
+    description_en = Column(String, nullable=True)
+    description_tr = Column(String, nullable=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"))
     price = Column(DECIMAL, nullable=False)
     amount = Column(DECIMAL, nullable=False)
@@ -50,7 +59,6 @@ class Product(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.now)
 
     category = relationship("Category", back_populates="product")
-    order_items = relationship("OrderItems", back_populates="product")
     transaction = relationship("Transaction", back_populates="product")
 
 
@@ -60,6 +68,7 @@ class OrderDetails(Base):
     id = Column(Integer, Sequence('unique_id'), primary_key=True, server_default=text("nextval('unique_id')"))
     client_id = Column(Integer, ForeignKey("clients.id"))
     total = Column(DECIMAL, nullable=False)
+    order_status = Column(String, default='New')
     payment_id = Column(Integer, ForeignKey("payment_details.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.now)
     updated_at = Column(DateTime(timezone=True), default=datetime.now)
@@ -74,11 +83,11 @@ class OrderItems(Base):
 
     id = Column(Integer, Sequence('unique_id'), primary_key=True, server_default=text("nextval('unique_id')"))
     order_id = Column(Integer, ForeignKey("order_details.id"))
-    product_id = Column(Integer, ForeignKey("products.id"))
-    amount = Column(DECIMAL, nullable=False)
+    product_id = Column(Integer, nullable=False)
+    product_name = Column(String, nullable=False)
     product_price = Column(DECIMAL, nullable=False)
+    amount = Column(DECIMAL, nullable=False)
 
-    product = relationship("Product", back_populates="order_items")
     order_details = relationship("OrderDetails", back_populates="order_items")
 
 
@@ -89,7 +98,7 @@ class PaymentDetails(Base):
     order_id = Column(Integer, nullable=False)
     amount = Column(DECIMAL, nullable=False)
     payment_method = Column(String, nullable=False)
-    status = Column(String, default='Not Paid')
+    payment_status = Column(String, default='Not Paid')
 
     order_details = relationship("OrderDetails", back_populates="payment_details")
 

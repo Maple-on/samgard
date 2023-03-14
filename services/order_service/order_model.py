@@ -1,7 +1,14 @@
+from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
+
+
+class OrderStatus(str, Enum):
+    new = "New"
+    completed = "Completed"
+    cancelled = "Cancelled"
 
 
 class ProductBase(BaseModel):
@@ -20,38 +27,12 @@ class ProductForWithdraw(BaseModel):
 class OrderDetailsModel(BaseModel):
     id: int
     client_id: int
-    status: str
+    order_status: OrderStatus
     total: Decimal
+    payment_status: str
     payment_id: str
     created_at: datetime
     updated_at: datetime
-
-
-class CreateOrderDetailsModel(BaseModel):
-    client_id: int
-    overall_price: Decimal
-
-
-class OrderItemsModel(BaseModel):
-    id: int
-    order_id: int
-    product_id: int
-    amount: Decimal
-    product_price: Decimal
-
-
-class CreateOrderItemsModel(BaseModel):
-    order_id: int
-    product_id: int
-    amount: Decimal
-    product_price: Decimal
-
-
-class CreateOrderItemsModel(BaseModel):
-    order_id: int
-    product_id: int
-    amount: Decimal
-    product_price: Decimal
 
 
 class CreateBaseOrder(BaseModel):

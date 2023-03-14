@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session, selectinload
 from fastapi import HTTPException, status
+from sqlalchemy import text
 
-from services.order_service.order_model import CreateBaseOrder
+from services.order_service.order_model import CreateBaseOrder, OrderStatus
 from database.models import OrderDetails, OrderItems, Client, PaymentDetails
 from services.product_service.product import check_if_product_exists, check_products_amount_and_return_data, update_product_amount
 
@@ -23,6 +24,7 @@ def create(request: CreateBaseOrder, db: Session):
         new_order_items = OrderItems(
             order_id=new_order.id,
             product_id=product.id,
+            product_name=product.name,
             amount=product.amount_to_withdraw,
             product_price=product.price
         )
@@ -30,12 +32,11 @@ def create(request: CreateBaseOrder, db: Session):
 
     db.commit()
     db.close()
-
     return request
 
 
 def get_list(offset: int, limit: int, db: Session):
-    orders = db.query(OrderDetails, Client.name, Client.phone, PaymentDetails.status, PaymentDetails.payment_method)\
+    orders = db.query(OrderDetails, Client.name, Client.phone, PaymentDetails.payment_status, PaymentDetails.payment_method)\
         .options(selectinload(OrderDetails.order_items))\
         .join(Client, OrderDetails.client_id == Client.id)\
         .outerjoin(PaymentDetails, OrderDetails.id == PaymentDetails.order_id)\
@@ -47,22 +48,51 @@ def get_list(offset: int, limit: int, db: Session):
             "client_phone": client_phone,
             "products": order.order_items,
             "total": order.total,
-            "status": status,
+            "order_status": order.order_status,
+            "payment_status": payment_status,
             "payment_method": payment_method,
             "created_at": order.created_at,
             "updated_at": order.updated_at,
         }
-        for order, client_name, client_phone, status, payment_method in orders
+        for order, client_name, client_phone, payment_status, payment_method in orders
     ]
+
+    db.close()
     return order_list
 
 
 def get_by_id(id: int, db: Session):
-    order = db.query(OrderDetails).filter(OrderDetails.id == id).first()
+    order = db.query(OrderDetails, Client.name, Client.phone, PaymentDetails.payment_status,
+                      PaymentDetails.payment_method) \
+        .options(selectinload(OrderDetails.order_items)) \
+        .join(Client, OrderDetails.client_id == Client.id) \
+        .outerjoin(PaymentDetails, OrderDetails.id == PaymentDetails.order_id) \
+        .order_by(OrderDetails.id).first()
+
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Order with id {id} not found")
-    return order
+    one_order = order[0]
+    client_name = order[1]
+    client_phone = order[2]
+    payment_status = order[3]
+    payment_method = order[4]
+
+    order_list = {
+        "id": one_order.id,
+        "client_name": client_name,
+        "client_phone": client_phone,
+        "products": one_order.order_items,
+        "total": one_order.total,
+        "order_status": one_order.order_status,
+        "payment_status": payment_status,
+        "payment_method": payment_method,
+        "created_at": one_order.created_at,
+        "updated_at": one_order.updated_at,
+    }
+
+    db.close()
+    return order_list
 
 
 def delete(id: int, db: Session):
@@ -73,12 +103,36 @@ def delete(id: int, db: Session):
 
     order_items = db.query(OrderItems).filter(OrderItems.order_id == id)
 
-    for order in order_items:
-        print(f"product id: {order.product_id} with amount {-order.amount}")
-        update_product_amount(order.product_id, -order.amount, db)
+    if order_details.first().order_status == OrderStatus.new:
+        for order in order_items:
+            print(f"product id: {order.product_id} with amount {-order.amount}")
+            update_product_amount(order.product_id, -order.amount, db)
 
     order_items.delete(synchronize_session=False)
     order_details.delete(synchronize_session=False)
     db.commit()
+    db.close()
 
     return status.HTTP_204_NO_CONTENT
+
+
+def cancel(id: int, db: Session):
+    order_items = db.query(OrderItems).filter(OrderItems.order_id == id)
+    order = get_by_id(id, db)
+    if order['order_status'] == OrderStatus.new:
+        for order in order_items:
+            print(f"product id: {order.product_id} with amount +{order.amount}")
+            update_product_amount(order.product_id, -order.amount, db)
+
+        update_order_status(id, OrderStatus.cancelled, db)
+        db.commit()
+        db.close()
+    else:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"Order should be in status New to cancel it")
+    return status.HTTP_202_ACCEPTED
+
+
+def update_order_status(id: int, status_to_change: str, db: Session):
+    sql = f"UPDATE order_details SET order_status = '{status_to_change}' WHERE id = '{id}'"
+    db.execute(text(sql))
