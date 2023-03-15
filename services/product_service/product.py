@@ -74,7 +74,7 @@ def get_list(accept_language: str, offset: int, limit: int, category_id: int, db
             products_list.append(each_product)
 
         db.close()
-        return products_list
+        return {"products": products_list, "total": count}
 
     for product, category in products:
         if accept_language == 'tr-TR':
