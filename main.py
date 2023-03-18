@@ -8,7 +8,8 @@ Base.metadata.create_all(engine)
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "https://abdulmalik-akhzamov.github.io/Samarqand-Garden/"
 ]
 
 app.add_middleware(
