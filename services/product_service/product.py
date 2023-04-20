@@ -216,29 +216,112 @@ def delete(id: int, db: Session):
     return status.HTTP_204_NO_CONTENT
 
 
-def search(name: str, db: Session):
-    products = db.query(Product, Category.name).join(Category, Product.category_id == Category.id)\
-        .order_by(desc(Product.created_at)).filter(Product.name.ilike(f"%{name}%")).all()
+def search(name: str, accept_language: str, db: Session):
+    unfiltered_products = db.query(Product, Category).join(Category, Product.category_id == Category.id) \
+             .order_by(desc(Product.created_at))
 
-    product_list = [
-        {
-            "id": product.id,
-            "name": product.name,
-            "description": product.description,
-            "category_id": product.category_id,
-            "category_name": category_name,
-            "price": product.price,
-            "amount": product.amount,
-            "unit": product.unit,
-            "image_url": product.image_url,
-            "created_at": product.created_at,
-            "updated_at": product.updated_at
-        }
-        for product, category_name in products
-    ]
+    if accept_language == 'tr-TR':
+        filter_by = Product.name_tr
+    elif accept_language == 'en-EN':
+        filter_by = Product.name_en
+    elif accept_language == 'uz-UZ':
+        filter_by = Product.name_uz
+    else:
+        filter_by = Product.name
+
+    products = unfiltered_products.filter(filter_by.ilike(f"%{name}%")).all()
+
+    products_list = []
+
+    for product, category in products:
+        if accept_language == 'tr-TR':
+            translated_name = product.name_tr
+            translated_description = product.description_tr
+            category_name = category.name_tr
+        elif accept_language == 'en-EN':
+            translated_name = product.name_en
+            translated_description = product.description_en
+            category_name = category.name_en
+        elif accept_language == 'uz-UZ':
+            translated_name = product.name_uz
+            translated_description = product.description_uz
+            category_name = category.name_uz
+        else:
+            translated_name = product.name
+            translated_description = product.description
+            category_name = category.name
+
+        each_product = ProductModel(
+            id=product.id,
+            name=translated_name,
+            description=translated_description,
+            category_id=product.category_id,
+            category_name=category_name,
+            price=product.price,
+            amount=product.amount,
+            unit=product.unit,
+            image_url=product.image_url,
+            created_at=product.created_at,
+            updated_at=product.updated_at
+        )
+        products_list.append(each_product)
     db.close()
 
-    return product_list
+    return products_list
+
+
+def get_list_by_categories(accept_language: str, category_id: int, db: Session):
+    query = db.query(Product, Category)\
+        .join(Category, Product.category_id == Category.id)
+
+    if category_id != 0:
+        query = query.filter(Product.category_id == category_id)
+
+    grouped_products = query.group_by(Category.id, Product.id).order_by(desc(Product.created_at)).all()
+
+    products_by_category = {}
+    for product, category in grouped_products:
+        if accept_language == 'tr-TR':
+            translated_name = product.name_tr
+            translated_description = product.description_tr
+            category_name = category.name_tr
+        elif accept_language == 'en-EN':
+            translated_name = product.name_en
+            translated_description = product.description_en
+            category_name = category.name_en
+        elif accept_language == 'uz-UZ':
+            translated_name = product.name_uz
+            translated_description = product.description_uz
+            category_name = category.name_uz
+        else:
+            translated_name = product.name
+            translated_description = product.description
+            category_name = category.name
+
+        if category.id not in products_by_category:
+            products_by_category[category.id] = {
+                "category_name": category_name,
+                "products": []
+            }
+
+        each_product = ProductModel(
+            id=product.id,
+            name=translated_name,
+            description=translated_description,
+            category_id=product.category_id,
+            category_name=category_name,
+            price=product.price,
+            amount=product.amount,
+            unit=product.unit,
+            image_url=product.image_url,
+            created_at=product.created_at,
+            updated_at=product.updated_at
+        )
+
+        products_by_category[category.id]["products"].append(each_product)
+
+    db.close()
+    return {"products_by_categories": list(products_by_category.values())}
 
 
 def check_if_product_exists(product_list: List[ProductBase], db: Session):
