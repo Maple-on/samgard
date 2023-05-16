@@ -9,7 +9,7 @@ from services.user_service.user_model import UserModel
 
 router = APIRouter(
     prefix="/category",
-    tags=['Category']
+    tags=['Categories']
 )
 
 get_db = database.get_db

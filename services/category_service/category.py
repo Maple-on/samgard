@@ -23,6 +23,8 @@ def create(request: CreateCategoryModel, db: Session):
 def get_list(accept_language: str, offset: int, limit: int, db: Session):
     categories = db.query(Category).order_by(desc(Category.created_at)).offset(offset).limit(limit).all()
     category_list = []
+    total_count = len(categories)
+
     if accept_language == 'all-ALL':
         for category in categories:
             each_category = CategoryModelWithAllLanguages(
@@ -58,7 +60,7 @@ def get_list(accept_language: str, offset: int, limit: int, db: Session):
         category_list.append(each_category)
 
     db.close()
-    return category_list
+    return {"categories": category_list, "total_count": total_count}
 
 
 def get_by_id(accept_language: str, id: int, db: Session):

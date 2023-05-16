@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import Optional, List, Any
+from pydantic import BaseModel, Field
 from datetime import datetime
 from decimal import Decimal
 
@@ -26,11 +26,13 @@ class ProductForWithdraw(BaseModel):
 
 class OrderDetailsModel(BaseModel):
     id: int
-    client_id: int
-    order_status: OrderStatus
+    client_name: str
+    client_phone: str
+    products: Any
     total: Decimal
-    payment_status: str
-    payment_id: str
+    order_status: str
+    payment_status: str = Field(None, allow_none=True)
+    payment_method: str = Field(None, allow_none=True)
     created_at: datetime
     updated_at: datetime
 

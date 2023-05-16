@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session, selectinload
 from fastapi import HTTPException, status
 from sqlalchemy import text
 
-from services.order_service.order_model import CreateBaseOrder, OrderStatus
+from services.order_service.order_model import CreateBaseOrder, OrderStatus, OrderDetailsModel
 from database.models import OrderDetails, OrderItems, Client, PaymentDetails
 from services.product_service.product import check_if_product_exists, check_products_amount_and_return_data, update_product_amount
 
@@ -41,24 +41,55 @@ def get_list(offset: int, limit: int, db: Session):
         .join(Client, OrderDetails.client_id == Client.id)\
         .outerjoin(PaymentDetails, OrderDetails.id == PaymentDetails.order_id)\
         .order_by(OrderDetails.id).offset(offset).limit(limit).all()
-    order_list = [
-        {
-            "id": order.id,
-            "client_name": client_name,
-            "client_phone": client_phone,
-            "products": order.order_items,
-            "total": order.total,
-            "order_status": order.order_status,
-            "payment_status": payment_status,
-            "payment_method": payment_method,
-            "created_at": order.created_at,
-            "updated_at": order.updated_at,
-        }
-        for order, client_name, client_phone, payment_status, payment_method in orders
-    ]
+
+    order_count = len(orders)
+    new_order_count = 0
+    new_order_sum = 0
+    completed_order_count = 0
+    completed_order_sum = 0
+    cancelled_order_count = 0
+    cancelled_order_sum = 0
+
+    order_list = []
+
+    for order, client_name, client_phone, payment_status, payment_method in orders:
+        if order.order_status == OrderStatus.completed:
+            completed_order_count += 1
+            completed_order_sum += order.total
+        elif order.order_status == OrderStatus.cancelled:
+            cancelled_order_count += 1
+            cancelled_order_sum += order.total
+        else:
+            new_order_count += 1
+            new_order_sum += order.total
+
+        order = OrderDetailsModel(
+            id=order.id,
+            client_name=client_name,
+            client_phone=client_phone,
+            products=order.order_items,
+            total=order.total,
+            order_status=order.order_status,
+            payment_status=payment_status,
+            payment_method=payment_method,
+            created_at=order.created_at,
+            updated_at=order.updated_at
+        )
+
+        order_list.append(order)
 
     db.close()
-    return order_list
+
+    return {
+        'orders': order_list,
+        'new_order_count': new_order_count,
+        'new_order_sum': new_order_sum,
+        'completed_order_count': completed_order_count,
+        'completed_order_sum': completed_order_sum,
+        'cancelled_order_count': cancelled_order_count,
+        'cancelled_order_sum': cancelled_order_sum,
+        'total_count': order_count
+    }
 
 
 def get_by_id(id: int, db: Session):
@@ -105,7 +136,6 @@ def delete(id: int, db: Session):
 
     if order_details.first().order_status == OrderStatus.new:
         for order in order_items:
-            print(f"product id: {order.product_id} with amount {-order.amount}")
             update_product_amount(order.product_id, -order.amount, db)
 
     order_items.delete(synchronize_session=False)
@@ -116,23 +146,35 @@ def delete(id: int, db: Session):
     return status.HTTP_204_NO_CONTENT
 
 
-def cancel(id: int, db: Session):
+def change_status(id: int, new_status: OrderStatus, db: Session):
     order_items = db.query(OrderItems).filter(OrderItems.order_id == id)
     order = get_by_id(id, db)
-    if order['order_status'] == OrderStatus.new:
-        for order in order_items:
-            print(f"product id: {order.product_id} with amount +{order.amount}")
-            update_product_amount(order.product_id, -order.amount, db)
 
-        update_order_status(id, OrderStatus.cancelled, db)
-        db.commit()
-        db.close()
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Order with id {id} not found")
+
+    if new_status == OrderStatus.cancelled:
+        if order['order_status'] == OrderStatus.new:
+            for order in order_items:
+                update_product_amount(order.product_id, -order.amount, db)
+
+            update_order_status(id, OrderStatus.cancelled, db)
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Order should be in status New to cancel it")
+
+        return status.HTTP_202_ACCEPTED
+    elif new_status == OrderStatus.completed:
+        update_order_status(id, OrderStatus.completed, db)
+        return status.HTTP_202_ACCEPTED
     else:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"Order should be in status New to cancel it")
-    return status.HTTP_202_ACCEPTED
+                            detail=f"Forbidden change status to New")
 
 
 def update_order_status(id: int, status_to_change: str, db: Session):
     sql = f"UPDATE order_details SET order_status = '{status_to_change}' WHERE id = '{id}'"
     db.execute(text(sql))
+    db.commit()
+    db.close()
