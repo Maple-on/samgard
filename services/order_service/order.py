@@ -40,9 +40,11 @@ def get_list(offset: int, limit: int, db: Session):
         .options(selectinload(OrderDetails.order_items))\
         .join(Client, OrderDetails.client_id == Client.id)\
         .outerjoin(PaymentDetails, OrderDetails.id == PaymentDetails.order_id)\
-        .order_by(OrderDetails.id).offset(offset).limit(limit).all()
+        .order_by(OrderDetails.id)
 
-    order_count = len(orders)
+    total_count = len(orders.all())
+    orders = orders.offset(offset).limit(limit).all()
+
     new_order_count = 0
     new_order_sum = 0
     completed_order_count = 0
@@ -88,7 +90,7 @@ def get_list(offset: int, limit: int, db: Session):
         'completed_order_sum': completed_order_sum,
         'cancelled_order_count': cancelled_order_count,
         'cancelled_order_sum': cancelled_order_sum,
-        'total_count': order_count
+        'total_count': total_count
     }
 
 
