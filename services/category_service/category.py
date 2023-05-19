@@ -39,7 +39,7 @@ def get_list(accept_language: str, offset: int, limit: int, db: Session):
             category_list.append(each_category)
 
         db.close()
-        return category_list
+        return {"categories": category_list, "total_count": total_count}
 
     for category in categories:
         if accept_language == 'tr-TR':
