@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from twilio.rest import Client
 
 from fastapi.security import OAuth2PasswordRequestForm
 from services.auth_service.auth_model import Token
 from database.models import User
 from database.hashing import Hash
 from services.auth_service.token import create_access_token
+from services.auth_service.auth_model import VerificationRequest
 
 
 def log_in(request: OAuth2PasswordRequestForm, db: Session):
@@ -24,3 +26,33 @@ def log_in(request: OAuth2PasswordRequestForm, db: Session):
         token_type="bearer"
     )
     return token
+
+
+account_sid = "AC420f6350a30782eae35844a30ca03e58"
+auth_token = "ef6de14c2e8203bf989b8a0df524a3ca"
+verify_sid = "VA14f7592c38a0368e0276644d43b59159"
+
+client = Client(account_sid, auth_token)
+
+
+def send_verification_sms(number: str):
+    try:
+        verification = client.verify.v2.services(verify_sid).verifications.create(
+            to=number,
+            channel="sms"
+        )
+        return {"status": verification.status}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to send verification code")
+
+
+def verify_sms_code(number: str, request: VerificationRequest):
+    code = request.code
+    try:
+        verification_check = client.verify.v2 \
+            .services(verify_sid) \
+            .verification_checks \
+            .create(to=number, code=code)
+        return {"status": verification_check.status}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to verify code")
