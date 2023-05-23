@@ -28,9 +28,9 @@ def log_in(request: OAuth2PasswordRequestForm, db: Session):
     return token
 
 
-account_sid = "AC420f6350a30782eae35844a30ca03e58"
-auth_token = "ef6de14c2e8203bf989b8a0df524a3ca"
-verify_sid = "VA14f7592c38a0368e0276644d43b59159"
+account_sid = "ACcaa6e6abc62b39eebd3d14f5db6d866b"
+auth_token = "2fd1590b1cc0d7f1f17b0ebc0236d644"
+verify_sid = "VA8ca8d2e458a0aa5122e62a48fc04fc8b"
 
 client = Client(account_sid, auth_token)
 
