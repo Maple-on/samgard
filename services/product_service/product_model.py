@@ -5,6 +5,11 @@ from datetime import datetime
 from fastapi import UploadFile
 
 
+class ProductBase(BaseModel):
+    id: int
+    amount: Decimal
+
+
 class ProductModel(BaseModel):
     id: int
     name: str

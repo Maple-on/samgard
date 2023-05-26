@@ -30,6 +30,12 @@ def create(request: CreateBaseOrder, db: Session):
         )
         db.add(new_order_items)
 
+    payment = PaymentDetails(
+        order_id=new_order.id,
+        amount=request.total,
+        payment_method=request.payment_type
+    )
+    db.add(payment)
     db.commit()
     db.close()
     return request
@@ -43,16 +49,12 @@ def get_list(offset: int, limit: int, db: Session):
         .order_by(OrderDetails.id)
 
     total_count = len(orders.all())
-    orders = orders.offset(offset).limit(limit).all()
-
     new_order_count = 0
     new_order_sum = 0
     completed_order_count = 0
     completed_order_sum = 0
     cancelled_order_count = 0
     cancelled_order_sum = 0
-
-    order_list = []
 
     for order, client_name, client_phone, payment_status, payment_method in orders:
         if order.order_status == OrderStatus.completed:
@@ -65,6 +67,11 @@ def get_list(offset: int, limit: int, db: Session):
             new_order_count += 1
             new_order_sum += order.total
 
+    orders = orders.offset(offset).limit(limit).all()
+
+    order_list = []
+
+    for order, client_name, client_phone, payment_status, payment_method in orders:
         order = OrderDetailsModel(
             id=order.id,
             client_name=client_name,
@@ -100,7 +107,7 @@ def get_by_id(id: int, db: Session):
         .options(selectinload(OrderDetails.order_items)) \
         .join(Client, OrderDetails.client_id == Client.id) \
         .outerjoin(PaymentDetails, OrderDetails.id == PaymentDetails.order_id) \
-        .order_by(OrderDetails.id).first()
+        .order_by(OrderDetails.id).filter(OrderDetails.id == id).first()
 
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -160,19 +167,23 @@ def change_status(id: int, new_status: OrderStatus, db: Session):
         if order['order_status'] == OrderStatus.new:
             for order in order_items:
                 update_product_amount(order.product_id, -order.amount, db)
-
             update_order_status(id, OrderStatus.cancelled, db)
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f"Order should be in status New to cancel it")
+        return {'status': OrderStatus.cancelled}
 
-        return status.HTTP_202_ACCEPTED
     elif new_status == OrderStatus.completed:
-        update_order_status(id, OrderStatus.completed, db)
-        return status.HTTP_202_ACCEPTED
+        if order['order_status'] == OrderStatus.new:
+            update_order_status(id, OrderStatus.completed, db)
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Order should be in status New to complete it")
+        return {'status': OrderStatus.completed}
+
     else:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"Forbidden change status to New")
+                            detail=f"Forbidden change status")
 
 
 def update_order_status(id: int, status_to_change: str, db: Session):

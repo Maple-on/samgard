@@ -11,6 +11,12 @@ class OrderStatus(str, Enum):
     cancelled = "Cancelled"
 
 
+class PaymentType(str, Enum):
+    payme = "Payme"
+    click = "Click"
+    cash = "Cash"
+
+
 class ProductBase(BaseModel):
     id: int
     amount: Decimal
@@ -41,3 +47,4 @@ class CreateBaseOrder(BaseModel):
     products: List[ProductBase]
     client_id: int
     total: Decimal
+    payment_type: PaymentType

@@ -349,11 +349,32 @@ def check_products_amount_and_return_data(product_list: List[ProductBase], db: S
         for db_product in db_product_list:
             if user_product.id == db_product.id:
                 if user_product.amount > db_product.amount:
-                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                         detail=f"Not enough amount of product('{db_product.name}') with id('{db_product.id}')")
                 else:
                     db_product.amount_to_withdraw = user_product.amount
     return db_product_list
+
+
+def check_products_amount(product_list: List[ProductBase], db: Session):
+    ids = {str(product.id) for product in product_list}
+
+    sql = "SELECT id, name, amount, price FROM products WHERE id IN :ids"
+    products = db.execute(text(sql), {"ids": tuple(ids)}).fetchall()
+    db.close()
+
+    db_product_list = [ProductForWithdraw(id=id, name=name, amount=amount, price=price) for id, name, amount, price in
+                       products]
+
+    for user_product in product_list:
+        for db_product in db_product_list:
+            if user_product.id == db_product.id:
+                if user_product.amount > db_product.amount:
+                    return {
+                        'status': False,
+                        'comment': f"Not enough amount of product('{db_product.name}') with id('{db_product.id}')"
+                    }
+    return {'status': True}
 
 
 def update_product_amount(id: int, amount_to_withdraw: Decimal, db: Session):

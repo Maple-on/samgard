@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, File, Header
+from typing import List
 
-from services.product_service.product_model import CreateProductModel, UpdateProductModel
-from services.product_service.product import create, get_list, get_by_id, delete, update, search, get_list_by_categories
+from services.product_service.product_model import CreateProductModel, UpdateProductModel, ProductBase
+from services.product_service.product import create, get_list, get_by_id, delete, update, search, get_list_by_categories, check_products_amount
 from database import database
 from database.oauth2 import get_current_user
 from services.user_service.user_model import UserModel
@@ -47,6 +48,11 @@ def Delete(id: int, session: Session = Depends(get_db),
 @router.get('/search/', status_code=status.HTTP_200_OK)
 def Search(name: str, accept_language: str = Header(None), session: Session = Depends(get_db)):
     return search(name, accept_language, session)
+
+
+@router.post('/check/', status_code=status.HTTP_200_OK)
+def Check_products_amount(request: List[ProductBase], session: Session = Depends(get_db)):
+    return check_products_amount(request, session)
 
 
 @router.get('/by_categories/', status_code=status.HTTP_200_OK)
