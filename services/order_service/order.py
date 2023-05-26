@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, selectinload
 from fastapi import HTTPException, status
-from sqlalchemy import text
+from sqlalchemy import text, asc, desc
 
 from services.order_service.order_model import CreateBaseOrder, OrderStatus, OrderDetailsModel
 from database.models import OrderDetails, OrderItems, Client, PaymentDetails
@@ -46,7 +46,7 @@ def get_list(offset: int, limit: int, db: Session):
         .options(selectinload(OrderDetails.order_items))\
         .join(Client, OrderDetails.client_id == Client.id)\
         .outerjoin(PaymentDetails, OrderDetails.id == PaymentDetails.order_id)\
-        .order_by(OrderDetails.id)
+        .order_by(desc(OrderDetails.id))
 
     total_count = len(orders.all())
     new_order_count = 0
